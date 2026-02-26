@@ -182,11 +182,137 @@ static off_t parse_size(const char *arg) {
  * Exit with an error for unknown options or missing filter arguments.
  */
 static char **parse_args(int argc, char *argv[], int *npaths) {
-    (void)argc;
-    (void)argv;
-    (void)npaths;
-    /* TODO: Your implementation here */
-    return NULL;
+    int i = 1;
+
+    char **paths = NULL;
+    int path_count = 0;
+    int path_cap = 0;
+
+    g_filters = NULL;
+    g_nfilters = 0;
+    int filter_cap = 0;
+
+    // these are the options, this should be pretty simple and done
+
+    while (i < argc) {
+        if (strcmp(argv[i], "-L") == 0) {
+            g_follow_links = true;
+            i++;
+        }
+        else if (strcmp(argv[i], "-xdev") == 0) {
+            g_xdev = 0;
+            i++;
+        }
+        else if (strcmp(argv[i], "help") == 0) {
+            print_usage(argv[0]);
+            exit(0);
+        }
+        else break;
+    }
+
+    // paths given
+
+    while (i < argc && argv[i][0] != '-') {
+        // make bigger if needed, like dictionary (CSC 357 - assgn 4)
+        if (path_count == path_cap) {
+            path_cap = path_cap ? path_cap * 2 : 4;
+            paths = realloc(paths, path_cap * sizeof(char *));
+        }
+        paths[path_count++] = strdup(argv[i++]);
+    }
+
+    // default path
+
+    if (path_count == 0) {
+        paths = malloc(sizeof(char *));
+        paths[0] = strdup(".");
+        path_count = 1;
+    }
+
+    // parse the filters, this is j a bunch of error handling lwk
+
+    while (i < argc) {
+        if (g_nfilters == filter_cap) {
+            filter_cap = filter_cap ? filter_cap * 2 : 4;
+            g_filters = realloc(g_filters, filter_cap * sizeof(filter_t));
+        }
+
+        filter_t *f = &g_filters[g_nfilters];
+
+        if (strcmp(argv[i], "-name") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "bfind: -name requires argument\n");
+                exit(EXIT_FAILURE);
+            }
+            f->kind = FILTER_NAME;
+            f->filter.pattern = argv[i + 1][0];
+            i += 2;
+        }
+        
+        else if (strcmp(argv[i], "-type") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "bfind: -type requires argument\n");
+                exit(EXIT_FAILURE);
+            }
+            f->kind = FILTER_TYPE;
+            f->filter.type_char = argv[i + 1][0];
+            i += 2;
+        }
+
+        else if (strcmp(argv[i], "-mtime") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "bfind: -mtime requires argument\n");
+                exit(EXIT_FAILURE);
+            }
+            f->kind = FILTER_MTIME;
+            f->filter.mtime_days = atoi(argv[i + 1]);
+            i += 2;
+        }
+
+        else if (strcmp(argv[i], "-size") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "bfind: -size requires argument\n");
+                exit(EXIT_FAILURE);
+            }
+
+            f->kind = FILTER_SIZE;
+
+            const char *arg = argv[i + 1];
+
+            if (arg[0] == '+') {
+                f->filter.size.size_cmp = SIZE_CMP_GREATER;
+                f->filter.size.size_bytes = parse_size(arg + 1);
+            } else if (arg[0] == '-') {
+                f->filter.size.size_cmp = SIZE_CMP_LESS;
+                f->filter.size.size_bytes = parse_size(arg + 1);
+            } else {
+                f->filter.size.size_cmp = SIZE_CMP_EXACT;
+                f->filter.size.size_bytes = parse_size(arg);
+            }
+
+            i += 2;
+        }
+
+        else if (strcmp(argv[i], "-perm") == 0) {
+            if (i + 1 >= argc) {
+                fprintf(stderr, "bfind: -perm requires argument\n");
+                exit(EXIT_FAILURE);
+            }
+            f->kind = FILTER_PERM;
+            f->filter.perm_mode = (mode_t)strtol(argv[i + 1], NULL, 8);
+            i += 2;
+        }
+
+        else {
+            fprintf(stderr, "bfind: unknown filter '%s'\n", argv[i]);
+            exit(EXIT_FAILURE);
+        }    
+
+        g_nfilters++;
+    }
+
+    *npaths = path_count;
+    return paths;
 }
 
 /* ------------------------------------------------------------------ */
