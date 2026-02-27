@@ -365,7 +365,55 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
  * The provided queue library (queue.h) implements a generic FIFO queue.
  */
 static void bfs_traverse(char **start_paths, int npaths) {
+    // i kinda wanna change these functions, like eh its whatever
+    queue_t queue;
+    queue_init(&queue);
+
+    for (int i = 0; i < npaths; i++)
+        queue_push(&queue, strdup(start_paths[i]));
     
+    while (!queue_is_empty(&queue)) {
+        char *path = queue_pop(&queue);
+        
+        // if stat fails
+        struct stat sb;
+        if (lstat(path, &sb) != 0) {
+            fprintf(stderr, "bfind: cannot stat '%s': %s\n", path, strerror(errno));
+            free(path);
+            continue;
+        }
+
+        printf("%s\n", path);
+
+        if (S_ISDIR(sb.st_mode)) {
+            // check if directory isn't openable, simple command
+            DIR *dir = opendir(path);
+            if (!dir) {
+                fprintf(stderr, "bfind: cannot open '%s': %s\n", path, strerrpr(errno));
+                free(path);
+                continue;
+            }
+
+            struct dirent *entry;
+            while ((entry = readdir(dir)) != NULL) {
+                if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+
+                // bind the path together and then push it to the queue
+                // bruh if we did ts in python holy crap itd be so easy
+                size_t len = strlen(path) + strlen(entry->d_name) + 2;
+                char *child = malloc(len);
+                snprintf(child, len, "%s/%s", path, entry->d_name);
+
+                queue_push(&queue, child);
+            }
+
+            closedir(dir);
+        }
+
+        free(path);
+    }
+
+    queue_destroy(&queue);
 }
 
 /* ------------------------------------------------------------------ */
