@@ -31,11 +31,11 @@ void queue_init(queue_t *q);
  * allocation failure. The queue takes ownership of the pointer but does
  * NOT copy the data — the caller is responsible for ensuring the pointer
  * remains valid until it is dequeued. */
-int queue_enqueue(queue_t *q, void *data);
+int queue_push(queue_t *q, void *data);
 
 /* Remove and return the element at the front of the queue.
  * Returns NULL if the queue is empty. */
-void *queue_dequeue(queue_t *q);
+void *queue_pop(queue_t *q);
 
 /* Return true if the queue is empty. */
 bool queue_is_empty(const queue_t *q);

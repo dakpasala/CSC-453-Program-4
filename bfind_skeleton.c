@@ -222,10 +222,10 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
             i++;
         }
         else if (strcmp(argv[i], "-xdev") == 0) {
-            g_xdev = 0;
+            g_xdev = true;
             i++;
         }
-        else if (strcmp(argv[i], "help") == 0) {
+        else if (strcmp(argv[i], "--help") == 0) {
             print_usage(argv[0]);
             exit(0);
         }
@@ -267,7 +267,7 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
                 exit(EXIT_FAILURE);
             }
             f->kind = FILTER_NAME;
-            f->filter.pattern = argv[i + 1][0];
+            f->filter.pattern = strdup(argv[i + 1]);
             i += 2;
         }
         
@@ -389,7 +389,7 @@ static void bfs_traverse(char **start_paths, int npaths) {
             // check if directory isn't openable, simple command
             DIR *dir = opendir(path);
             if (!dir) {
-                fprintf(stderr, "bfind: cannot open '%s': %s\n", path, strerrpr(errno));
+                fprintf(stderr, "bfind: cannot open '%s': %s\n", path, strerror(errno));
                 free(path);
                 continue;
             }

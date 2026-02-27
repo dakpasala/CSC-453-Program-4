@@ -14,7 +14,7 @@ void queue_init(queue_t *q) {
     q->size = 0;
 }
 
-int queue_enqueue(queue_t *q, void *data) {
+int queue_push(queue_t *q, void *data) {
     queue_node_t *node = malloc(sizeof(queue_node_t));
     if (!node) {
         return -1;
@@ -32,7 +32,7 @@ int queue_enqueue(queue_t *q, void *data) {
     return 0;
 }
 
-void *queue_dequeue(queue_t *q) {
+void *queue_pop(queue_t *q) {
     if (!q->head) {
         return NULL;
     }
