@@ -162,9 +162,31 @@ static void print_usage(const char *progname) {
  *
  * Examples: "100c" -> 100, "4k" -> 4096, "2M" -> 2097152, "512" -> 512
  */
+
+bool is_digit(char c) {
+    return c >= '0' && c <= '9';
+}
+
 static off_t parse_size(const char *arg) {
-    (void)arg;
-    /* TODO: Your implementation here */
+    int i = 0;
+    off_t value = 0;
+
+    if (!is_digit(arg[0])) {
+        fprintf(stderr, "Must provide number\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (arg[i] != '\0' && is_digit(arg[i])) 
+        value = value * 10 + (arg[i++] - '0');
+
+    if (arg[i] == '\0' || arg[i] == 'c') return value;
+    else if (arg[i] == 'k') return value * 1024;
+    else if (arg[i] == 'M') return value * 1024 * 1024;
+    else {
+        fprintf(stderr, "Must be either c, k, or M at the end\n");
+        exit(EXIT_FAILURE);
+    }
+
     return 0;
 }
 
@@ -343,9 +365,7 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
  * The provided queue library (queue.h) implements a generic FIFO queue.
  */
 static void bfs_traverse(char **start_paths, int npaths) {
-    (void)start_paths;
-    (void)npaths;
-    /* TODO: Your implementation here */
+    
 }
 
 /* ------------------------------------------------------------------ */
