@@ -101,13 +101,57 @@ static time_t g_now;
  * Refer to the assignment document for the specification of each filter.
  * Relevant man pages: fnmatch(3), stat(2).
  */
-static bool filter_matches(const filter_t *f, const char *path,
-                           const struct stat *sb) {
-    (void)f;
-    (void)path;
-    (void)sb;
-    /* TODO: Your implementation here */
+
+// this is so we don't deal with merge conflicts, much easier
+
+static bool match_name(const filter_t *f, const char *path) {
     return false;
+}
+
+static bool match_type(const filter_t *f, const struct stat *sb) {
+    (void)f;
+    (void)sb;
+    return false;
+}
+
+static bool match_mtime(const filter_t *f, const struct stat *sb) {
+    (void)f;
+    (void)sb;
+    return false;
+}
+
+static bool match_size(const filter_t *f, const struct stat *sb) {
+    (void)f;
+    (void)sb;
+    return false;
+}
+
+static bool match_perm(const filter_t *f, const struct stat *sb) {
+    (void)f;
+    (void)sb;
+    return false;
+}
+
+static bool filter_matches(const filter_t *f, const char *path, const struct stat *sb) {
+    switch (f->kind) {
+        case FILTER_NAME:
+            return match_name(f, path);
+
+        case FILTER_TYPE:
+            return match_type(f, sb);
+
+        case FILTER_MTIME:
+            return match_mtime(f, sb);
+
+        case FILTER_SIZE:
+            return match_size(f, sb);
+
+        case FILTER_PERM:
+            return match_perm(f, sb);
+
+        default:
+            return false;
+    }
 }
 
 /* Check if ALL filters match (AND semantics).
