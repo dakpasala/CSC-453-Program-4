@@ -119,8 +119,16 @@ static bool match_name(const filter_t *f, const char *path) {
 }
 
 static bool match_type(const filter_t *f, const struct stat *sb) {
-    (void)f;
-    (void)sb;
+    // easiest one just see if the filter type matches, that's all
+    switch (f->filter.type_char) {
+        case 'f':
+            return S_ISREG(sb->st_mode);
+        case 'd':
+            return S_ISDIR(sb->st_mode);
+        case 'l':
+            return S_ISLNK(sb->st_mode);
+    }
+
     return false;
 }
 
