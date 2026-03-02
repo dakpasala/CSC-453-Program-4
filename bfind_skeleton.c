@@ -132,12 +132,14 @@ static bool match_type(const filter_t *f, const struct stat *sb) {
     return false;
 }
 
+// TODO: here ya go Ivan
 static bool match_mtime(const filter_t *f, const struct stat *sb) {
     (void)f;
     (void)sb;
     return false;
 }
 
+// TODO: here ya go Ivan
 static bool match_size(const filter_t *f, const struct stat *sb) {
     (void)f;
     (void)sb;
