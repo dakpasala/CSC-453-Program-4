@@ -145,9 +145,8 @@ static bool match_size(const filter_t *f, const struct stat *sb) {
 }
 
 static bool match_perm(const filter_t *f, const struct stat *sb) {
-    (void)f;
-    (void)sb;
-    return false;
+    // what da hell why is this so short
+    return (sb->st_mode & 07777) == f->filter.perm_mode;
 }
 
 static bool filter_matches(const filter_t *f, const char *path, const struct stat *sb) {
