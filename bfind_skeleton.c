@@ -105,6 +105,16 @@ static time_t g_now;
 // this is so we don't deal with merge conflicts, much easier
 
 static bool match_name(const filter_t *f, const char *path) {
+    // reverse search and see if '/' exists
+    const char *base = strrchr(path, '/');
+
+    // if it does, we move forward so "/main.c" to "main.c"
+    if (base) base++;
+    else base = path;
+
+    // check if like a .c would be in main.c. if 0, then it is, and return true
+    if (fnmatch(f->filter.pattern, base, 0) == 0) return true;
+
     return false;
 }
 
