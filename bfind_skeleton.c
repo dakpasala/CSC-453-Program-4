@@ -132,17 +132,26 @@ static bool match_type(const filter_t *f, const struct stat *sb) {
     return false;
 }
 
-// TODO: here ya go Ivan
 static bool match_mtime(const filter_t *f, const struct stat *sb) {
-    (void)f;
-    (void)sb;
-    return false;
+    int f_mtime_days = f->filter.mtime_days;
+    int sb_mtime_days = difftime(g_now, sb->st_mtime) / 86400;
+
+    return sb_mtime_days == f_mtime_days;
 }
 
-// TODO: here ya go Ivan
 static bool match_size(const filter_t *f, const struct stat *sb) {
-    (void)f;
-    (void)sb;
+    off_t f_size = f->filter.size.size_bytes;
+    off_t sb_size = sb->st_size;
+
+    switch (f->filter.size.size_cmp) {
+        case SIZE_CMP_EXACT:
+            return sb_size == f_size;
+        case SIZE_CMP_GREATER:
+            return sb_size > f_size;
+        case SIZE_CMP_LESS:
+            return sb_size < f_size;
+    }
+
     return false;
 }
 
@@ -239,7 +248,8 @@ static off_t parse_size(const char *arg) {
         exit(EXIT_FAILURE);
     }
 
-    while (arg[i] != '\0' && is_digit(arg[i])) 
+    while (arg[i] != '\0' && is_digit(arg[i]))
+        // Subtracting '0' converts char digit to int value 
         value = value * 10 + (arg[i++] - '0');
 
     if (arg[i] == '\0' || arg[i] == 'c') return value;
