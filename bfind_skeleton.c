@@ -263,6 +263,13 @@ static off_t parse_size(const char *arg) {
     return 0;
 }
 
+static void cleanup_paths(char **paths, int count) {
+    for (int i = 0; i < count; i++) {
+        free(paths[i]);
+    }
+    free(paths);
+}
+    
 /*
  * TODO 3: Implement this function.
  *
@@ -337,6 +344,7 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
         if (strcmp(argv[i], "-name") == 0) {
             if (i + 1 >= argc) {
                 fprintf(stderr, "bfind: -name requires argument\n");
+                cleanup_paths(paths, path_count);
                 exit(EXIT_FAILURE);
             }
             f->kind = FILTER_NAME;
@@ -347,6 +355,7 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
         else if (strcmp(argv[i], "-type") == 0) {
             if (i + 1 >= argc) {
                 fprintf(stderr, "bfind: -type requires argument\n");
+                cleanup_paths(paths, path_count);
                 exit(EXIT_FAILURE);
             }
             f->kind = FILTER_TYPE;
@@ -357,6 +366,7 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
         else if (strcmp(argv[i], "-mtime") == 0) {
             if (i + 1 >= argc) {
                 fprintf(stderr, "bfind: -mtime requires argument\n");
+                cleanup_paths(paths, path_count);
                 exit(EXIT_FAILURE);
             }
             f->kind = FILTER_MTIME;
@@ -367,6 +377,7 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
         else if (strcmp(argv[i], "-size") == 0) {
             if (i + 1 >= argc) {
                 fprintf(stderr, "bfind: -size requires argument\n");
+                cleanup_paths(paths, path_count);
                 exit(EXIT_FAILURE);
             }
 
@@ -391,6 +402,7 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
         else if (strcmp(argv[i], "-perm") == 0) {
             if (i + 1 >= argc) {
                 fprintf(stderr, "bfind: -perm requires argument\n");
+                cleanup_paths(paths, path_count);
                 exit(EXIT_FAILURE);
             }
             f->kind = FILTER_PERM;
@@ -400,6 +412,7 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
 
         else {
             fprintf(stderr, "bfind: unknown filter '%s'\n", argv[i]);
+            cleanup_paths(paths, path_count);
             exit(EXIT_FAILURE);
         }    
 
