@@ -469,7 +469,9 @@ static void bfs_traverse(char **start_paths, int npaths) {
             continue;
         }
 
-        printf("%s\n", path);
+        if (matches_all_filters(path, &sb)) {
+            printf("%s\n", path);
+        }
 
         if (S_ISDIR(sb.st_mode)) {
             // check if directory isn't openable, simple command
