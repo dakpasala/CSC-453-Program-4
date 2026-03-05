@@ -331,6 +331,14 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
         path_count = 1;
     }
 
+    struct stat start_sb;
+    if (stat(paths[0], &start_sb) == 0) {
+        g_start_dev = start_sb.st_dev;
+    } else {
+        fprintf(stderr, "bfind: cannot stat '%s': %s\n", 
+                paths[0], strerror(errno));
+    }
+
     // parse the filters, this is j a bunch of error handling lwk
 
     while (i < argc) {
@@ -469,6 +477,12 @@ static void bfs_traverse(char **start_paths, int npaths) {
             continue;
         }
 
+        // if -xdev is set, check if the file's device matches the first path's device
+        if (g_xdev && !(sb.st_dev == g_start_dev)) {
+            free(path);
+            continue;
+        }
+
         if (matches_all_filters(path, &sb)) {
             printf("%s\n", path);
         }
@@ -488,9 +502,20 @@ static void bfs_traverse(char **start_paths, int npaths) {
 
                 // bind the path together and then push it to the queue
                 // bruh if we did ts in python holy crap itd be so easy
-                size_t len = strlen(path) + strlen(entry->d_name) + 2;
+                size_t path_len = strlen(path);
+                bool has_slash = (path_len > 0 && path[path_len - 1] == '/');
+
+                size_t len = path_len + strlen(entry->d_name) + (has_slash ? 1 : 2);
                 char *child = malloc(len);
-                snprintf(child, len, "%s/%s", path, entry->d_name);
+
+                // if the path already ends with a slash, we don't need to add another one
+                if (has_slash) {
+                    snprintf(child, len, "%s%s", path, entry->d_name);
+                } else {
+                    snprintf(child, len, "%s/%s", path, entry->d_name);
+                }
+
+                // Do we need to remove './' from the beginning of the path? 
 
                 queue_push(&queue, child);
             }
