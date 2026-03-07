@@ -136,7 +136,7 @@ static bool match_mtime(const filter_t *f, const struct stat *sb) {
     int f_mtime_days = f->filter.mtime_days;
     int sb_mtime_days = difftime(g_now, sb->st_mtime) / 86400;
 
-    return sb_mtime_days == f_mtime_days;
+    return sb_mtime_days <= f->filter.mtime_days;
 }
 
 static bool match_size(const filter_t *f, const struct stat *sb) {
