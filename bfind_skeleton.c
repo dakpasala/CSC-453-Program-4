@@ -458,6 +458,29 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
  *
  * The provided queue library (queue.h) implements a generic FIFO queue.
  */
+
+static dev_ino_t *visited = NULL;
+static int visited_count = 0;
+static int visited_cap = 0;
+
+static bool seen_before(dev_t dev, ino_t ino) {
+    for (int i = 0; i < visited_count; i++) 
+        if (visited[i].dev && visited[i].ino == ino) return true;
+
+    return false;
+}
+
+static void record_dir(dev_t dev, ino_t ino) {
+    if (visited_count == visited_cap) {
+        visited_cap = visited_cap ? visited_cap * 2 : 16;
+        visited = realloc(visited, visited_cap * sizeof(dev_ino_t));
+    }
+
+    visited[visited_count].dev = dev;
+    visited[visited_count].ino = ino;
+    visited_count++;
+}
+
 static void bfs_traverse(char **start_paths, int npaths) {
     // i kinda wanna change these functions, like eh its whatever
     queue_t queue;
@@ -471,7 +494,12 @@ static void bfs_traverse(char **start_paths, int npaths) {
         
         // if stat fails
         struct stat sb;
-        if (lstat(path, &sb) != 0) {
+
+        int ret;
+        if (g_follow_links) ret = stat(path, &sb);
+        else ret = lstat(path, &sb);
+        
+        if (ret != 0) {
             fprintf(stderr, "bfind: cannot stat '%s': %s\n", path, strerror(errno));
             free(path);
             continue;
@@ -488,6 +516,14 @@ static void bfs_traverse(char **start_paths, int npaths) {
         }
 
         if (S_ISDIR(sb.st_mode)) {
+
+            if (g_follow_links) {
+                if (seen_before(sb.st_dev, sb.st_ino)) {
+                    free(path);
+                    continue;
+                }
+                record_dir(sb.st_dev, sb.st_ino);
+            }
             // check if directory isn't openable, simple command
             DIR *dir = opendir(path);
             if (!dir) {
