@@ -465,7 +465,7 @@ static int visited_cap = 0;
 
 static bool seen_before(dev_t dev, ino_t ino) {
     for (int i = 0; i < visited_count; i++) 
-        if (visited[i].dev && visited[i].ino == ino) return true;
+        if (visited[i].dev == dev && visited[i].ino == ino) return true;
 
     return false;
 }
@@ -516,12 +516,18 @@ static void bfs_traverse(char **start_paths, int npaths) {
         }
 
         if (S_ISDIR(sb.st_mode)) {
-
-            if (g_follow_links) {
+            struct stat lsb;
+            bool is_symlink = (lstat(path, &lsb) == 0 && S_ISLNK(lsb.st_mode));
+            if (g_follow_links && is_symlink) {
+                // Only check cycles for symlinks
                 if (seen_before(sb.st_dev, sb.st_ino)) {
                     free(path);
                     continue;
-                }
+                } 
+            }
+            
+            // Record ALL directories (real and symlink targets) after descending
+            if (g_follow_links) {
                 record_dir(sb.st_dev, sb.st_ino);
             }
             // check if directory isn't openable, simple command
