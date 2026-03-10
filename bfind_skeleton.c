@@ -337,6 +337,8 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
     } else {
         fprintf(stderr, "bfind: cannot stat '%s': %s\n", 
                 paths[0], strerror(errno));
+        fprintf(stderr, "DEBUG parse_args paths[0]=%s g_start_dev=%lu\n",
+                paths[0], (unsigned long)g_start_dev);
     }
 
     // parse the filters, this is j a bunch of error handling lwk
@@ -366,7 +368,7 @@ static char **parse_args(int argc, char *argv[], int *npaths) {
                 cleanup_paths(paths, path_count);
                 exit(EXIT_FAILURE);
             }
-            f->kind = FILTER_TYPE;
+            f->kind = FILTER_TYPE; 
             f->filter.type_char = argv[i + 1][0];
             i += 2;
         }
@@ -503,13 +505,7 @@ static void bfs_traverse(char **start_paths, int npaths) {
             fprintf(stderr, "bfind: cannot stat '%s': %s\n", path, strerror(errno));
             free(path);
             continue;
-        }
-
-        // if -xdev is set, check if the file's device matches the first path's device
-        if (g_xdev && !(sb.st_dev == g_start_dev)) {
-            free(path);
-            continue;
-        }
+        }       
 
         if (matches_all_filters(path, &sb)) {
             printf("%s\n", path);
@@ -518,18 +514,23 @@ static void bfs_traverse(char **start_paths, int npaths) {
         if (S_ISDIR(sb.st_mode)) {
             struct stat lsb;
             bool is_symlink = (lstat(path, &lsb) == 0 && S_ISLNK(lsb.st_mode));
-            if (g_follow_links && is_symlink) {
-                // Only check cycles for symlinks
-                if (seen_before(sb.st_dev, sb.st_ino)) {
-                    free(path);
-                    continue;
-                } 
+
+            if (g_follow_links && is_symlink && seen_before(sb.st_dev, sb.st_ino)) {
+                free(path);
+                continue;
             }
             
-            // Record ALL directories (real and symlink targets) after descending
-            if (g_follow_links) {
+            fprintf(stderr, "DEBUG path=%s sb.st_dev=%lu g_start_dev=%lu\n", 
+            path, (unsigned long)sb.st_dev, (unsigned long)g_start_dev);
+
+            if (g_xdev && sb.st_dev != g_start_dev) {
+                free(path);
+                continue;
+            }   
+
+            if (g_follow_links && is_symlink) 
                 record_dir(sb.st_dev, sb.st_ino);
-            }
+
             // check if directory isn't openable, simple command
             DIR *dir = opendir(path);
             if (!dir) {
@@ -585,5 +586,6 @@ int main(int argc, char *argv[]) {
 
     free(paths);
     free(g_filters);
+    free(visited);
     return 0;
 }
