@@ -486,10 +486,10 @@ static void bfs_traverse(char **start_paths, int npaths) {
     queue_init(&queue);
 
     for (int i = 0; i < npaths; i++)
-        queue_push(&queue, strdup(start_paths[i]));
+        queue_enqueue(&queue, strdup(start_paths[i]));
     
     while (!queue_is_empty(&queue)) {
-        char *path = queue_pop(&queue);
+        char *path = queue_dequeue(&queue);
         
         // if stat fails
         struct stat sb;
@@ -554,7 +554,7 @@ static void bfs_traverse(char **start_paths, int npaths) {
 
                 // Do we need to remove './' from the beginning of the path? 
 
-                queue_push(&queue, child);
+                queue_enqueue(&queue, child);
             }
 
             closedir(dir);
