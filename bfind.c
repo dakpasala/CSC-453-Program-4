@@ -538,7 +538,6 @@ static void bfs_traverse(char **start_paths, int npaths) {
                 if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
 
                 // bind the path together and then push it to the queue
-                // bruh if we did ts in python holy crap itd be so easy
                 size_t path_len = strlen(path);
                 bool has_slash = (path_len > 0 && path[path_len - 1] == '/');
 
