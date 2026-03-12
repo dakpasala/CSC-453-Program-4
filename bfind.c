@@ -481,7 +481,6 @@ static void record_dir(dev_t dev, ino_t ino) {
 }
 
 static void bfs_traverse(char **start_paths, int npaths) {
-    // i kinda wanna change these functions, like eh its whatever
     queue_t queue;
     queue_init(&queue);
 
